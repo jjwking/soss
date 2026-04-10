@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>자금나침반 — 소상공인 정부지원 자금 안내</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif; background: #f7f8fa; color: #1a1a1a; min-height: 100vh; }
+  .app { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; }
+  .header { padding: 1.25rem 1.25rem 0; }
+  .logo { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+  .logo span { color: #0ea06b; }
+  .tagline { font-size: 13px; color: #888; margin-top: 3px; }
+  .step-bar { display: flex; gap: 5px; padding: 1rem 1.25rem 0; }
+  .step-dot { flex: 1; height: 3px; border-radius: 2px; background: #e5e7eb; transition: background .3s; }
+  .step-dot.done { background: #0ea06b; }
+  .step-dot.active { background: #5DCAA5; }
+  .section { display: none; padding: 1.25rem; }
+  .section.active { display: block; }
+  .section-title { font-size: 18px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; line-height: 1.4; }
+  .section-sub { font-size: 14px; color: #888; margin-bottom: 1.25rem; line-height: 1.6; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
+  .chip { padding: 10px 16px; border-radius: 24px; border: 1.5px solid #e5e7eb; font-size: 15px; cursor: pointer; background: #fff; color: #444; transition: all .15s; font-weight: 500; }
+  .chip.selected { background: #e6f7f1; border-color: #0ea06b; color: #0a7a52; }
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; font-weight: 500; }
+  .field select { width: 100%; padding: 14px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 16px; color: #1a1a1a; background: #fff; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+  .btn-primary { width: 100%; padding: 16px; background: #0ea06b; color: white; border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; margin-top: .5rem; transition: opacity .15s; }
+  .btn-primary:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-primary:active { opacity: .85; }
+  .btn-secondary { width: 100%; padding: 14px; background: transparent; color: #888; border: 1.5px solid #e5e7eb; border-radius: 14px; font-size: 15px; cursor: pointer; margin-top: 8px; font-weight: 500; }
+  .notice-box { background: #e6f7f1; border-radius: 12px; padding: 12px 16px; font-size: 14px; color: #0a7a52; line-height: 1.6; margin-bottom: 1.25rem; font-weight: 500; }
+  .warn-box { background: #fff8e6; border-radius: 12px; padding: 12px 16px; font-size: 14px; color: #b07800; line-height: 1.6; margin: 4px 0 1rem; }
+  .doc-card { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+  .doc-card-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .doc-badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #e6f7f1; color: #0a7a52; font-weight: 600; }
+  .doc-badge.opt { background: #f0f0f0; color: #888; }
+  .doc-upload-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .doc-label { font-size: 14px; color: #444; flex: 1; }
+  .doc-btn { padding: 8px 14px; background: #f7f8fa; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 13px; color: #444; cursor: pointer; white-space: nowrap; font-weight: 600; }
+  .doc-btn.done { background: #e6f7f1; border-color: #0ea06b; color: #0a7a52; }
+  .doc-tip { font-size: 12px; color: #888; background: #f7f8fa; border-radius: 8px; padding: 8px 12px; line-height: 1.6; margin-top: 4px; }
+  .doc-status { font-size: 12px; color: #0ea06b; margin-top: 4px; display: none; font-weight: 500; }
+  .hidden-input { display: none; }
+  .doc-list { font-size: 14px; color: #666; line-height: 1.9; }
+  .result-tag { font-size: 13px; color: #888; margin-bottom: 1rem; }
+  .fund-card { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 16px; padding: 1.1rem 1.25rem; margin-bottom: 12px; }
+  .fund-name { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; line-height: 1.4; }
+  .fund-name small { font-size: 13px; color: #888; font-weight: 500; }
+  .fund-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .fund-item { background: #f7f8fa; border-radius: 10px; padding: 10px 12px; }
+  .fund-item-label { font-size: 11px; color: #888; margin-bottom: 3px; font-weight: 500; }
+  .fund-item-value { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+  .fund-item-value.green { color: #0a7a52; }
+  .fund-apply { display: block; width: 100%; padding: 12px; background: #e6f7f1; color: #0a7a52; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; }
+  .agent-box { background: #f7f8fa; border-radius: 16px; padding: 1.25rem; margin-top: 4px; text-align: center; }
+  .agent-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+  .agent-desc { font-size: 13px; color: #888; margin-bottom: 14px; line-height: 1.6; }
+  .btn-agent { width: 100%; padding: 15px; background: #1a1a1a; color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .divider { border: none; border-top: 1px solid #f0f0f0; margin: 1.25rem 0; }
+  .choice-card { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 16px; padding: 1.25rem; margin-bottom: 12px; cursor: pointer; }
+  .choice-card:active { background: #f7f8fa; }
+  .choice-icon { font-size: 28px; margin-bottom: 8px; }
+  .choice-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+  .choice-desc { font-size: 13px; color: #888; line-height: 1.5; }
+  .phone-display { background: #f7f8fa; border-radius: 14px; padding: 20px; text-align: center; margin-bottom: 1.25rem; min-height: 76px; display: flex; align-items: center; justify-content: center; }
+  .phone-placeholder { font-size: 18px; color: #ccc; }
+  .phone-number { font-size: 28px; font-weight: 700; color: #1a1a1a; letter-spacing: 2px; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
+  .key { padding: 18px 10px; background: #f7f8fa; border: none; border-radius: 14px; font-size: 24px; font-weight: 700; color: #1a1a1a; cursor: pointer; }
+  .key:active { background: #e5e7eb; }
+  .key.del { font-size: 20px; color: #888; }
+  .key.empty { background: transparent; cursor: default; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">자금<span>나침반</span></div>
+    <div class="tagline">소상공인 정부지원 자금 무료 안내</div>
+  </div>
+  <div class="step-bar">
+    <div class="step-dot active" id="dot0"></div>
+    <div class="step-dot" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+    <div class="step-dot" id="dot4"></div>
+  </div>
+
+  <!-- 0: 인트로 -->
+  <div class="section active" id="sec0">
+    <div style="padding-top:.5rem">
+      <p class="section-title">사장님, 직접 하면<br>수수료 한 푼도 없어요.</p>
+      <p class="section-sub">정부지원 자금, 알고 보면 어렵지 않아요.<br>저희가 단계별로 안내해드릴게요.<br><br>진짜 막힐 때만 저희 부르세요.<br>그때는 수수료 <strong style="color:#0ea06b">3%</strong>만 받아요.<br>사장님도 최대한 아끼셔야죠. 😊</p>
+      <button class="btn-primary" onclick="goNext(0)">시작하기</button>
+    </div>
+  </div>
+
+  <!-- 1: 업종 -->
+  <div class="section" id="sec1">
+    <p class="section-title">어떤 업종을<br>운영 중이신가요?</p>
+    <div class="chips" id="chips-type">
+      <div class="chip" data-val="음식점/카페">음식점/카페</div>
+      <div class="chip" data-val="소매/판매">소매/판매</div>
+      <div class="chip" data-val="서비스업">서비스업</div>
+      <div class="chip" data-val="제조/생산">제조/생산</div>
+      <div class="chip" data-val="숙박/여행">숙박/여행</div>
+      <div class="chip" data-val="뷰티/헬스">뷰티/헬스</div>
+      <div class="chip" data-val="교육/학원">교육/학원</div>
+      <div class="chip" data-val="운수업">운수업</div>
+      <div class="chip" data-val="부동산업">부동산업</div>
+      <div class="chip" data-val="노래방/유흥">노래방/유흥</div>
+      <div class="chip" data-val="기타">기타</div>
+    </div>
+    <button class="btn-primary" id="btn1" disabled onclick="goNext(1)">다음</button>
+  </div>
+
+  <!-- 2: 사업현황 -->
+  <div class="section" id="sec2">
+    <p class="section-title">사업 현황을<br>알려주세요</p>
+    <div class="notice-box">💡 운영자금 목적으로 신청할 때 승인률이 가장 높아요.</div>
+    <div class="field">
+      <label>사업 기간</label>
+      <select id="bizAge">
+        <option value="">선택하세요</option>
+        <option value="1년 미만">1년 미만</option>
+        <option value="1~3년">1~3년</option>
+        <option value="3~7년">3~7년</option>
+        <option value="7년 이상">7년 이상</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>연간 매출액</label>
+      <select id="revenue">
+        <option value="">선택하세요</option>
+        <option value="5천만원 미만">5천만원 미만</option>
+        <option value="5천~1억">5천만원 ~ 1억원</option>
+        <option value="1~3억">1억 ~ 3억원</option>
+        <option value="3억 이상">3억원 이상</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>신용점수</label>
+      <select id="credit">
+        <option value="">선택하세요</option>
+        <option value="800점 이상">800점 이상 (우수)</option>
+        <option value="700~799점">700~799점 (양호)</option>
+        <option value="600~699점">600~699점 (보통)</option>
+        <option value="600점 미만">600점 미만 (낮음)</option>
+        <option value="모름">모름</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>사업체 소재지</label>
+      <select id="region">
+        <option value="">선택하세요</option>
+        <option value="서울">서울</option>
+        <option value="경기/인천">경기/인천</option>
+        <option value="부산/울산/경남">부산/울산/경남</option>
+        <option value="대구/경북">대구/경북</option>
+        <option value="광주/전남/전북">광주/전남/전북</option>
+        <option value="대전/충청">대전/충청</option>
+        <option value="강원">강원</option>
+        <option value="제주">제주</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="btn2" disabled onclick="goNext(2)">다음</button>
+    <button class="btn-secondary" onclick="goBack(2)">이전</button>
+  </div>
+
+  <!-- 3: 서류 안내 -->
+  <div class="section" id="sec3">
+    <p class="section-title">이것만 준비하면<br>사장님 혼자도 충분해요</p>
+    <p class="section-sub">신청 전에 아래 서류를 미리 찍어두세요.</p>
+    <div class="doc-card">
+      <p class="doc-card-title">신분증 사본 <span class="doc-badge">필수</span></p>
+      <div class="doc-upload-row">
+        <span class="doc-label">주민등록증 또는 운전면허증</span>
+        <button class="doc-btn" id="btn-id" onclick="triggerUpload('upload-id','btn-id','status-id')">📷 찍기</button>
+      </div>
+      <p class="doc-status" id="status-id">✓ 완료</p>
+      <p class="doc-tip">📸 카메라 앱의 <strong>문서 스캔 모드</strong>로 찍으면 빛반사 없이 깔끔해요</p>
+      <input class="hidden-input" type="file" id="upload-id" accept="image/*" capture="environment">
+    </div>
+    <div class="doc-card">
+      <p class="doc-card-title">사업자등록증 <span class="doc-badge">필수</span></p>
+      <div class="doc-upload-row">
+        <span class="doc-label">사업자등록증 원본</span>
+        <button class="doc-btn" id="btn-biz" onclick="triggerUpload('upload-biz','btn-biz','status-biz')">📷 찍기</button>
+      </div>
+      <p class="doc-status" id="status-biz">✓ 완료</p>
+      <p class="doc-tip">📸 평평하게 놓고 위에서 수직으로 찍어주세요</p>
+      <input class="hidden-input" type="file" id="upload-biz" accept="image/*" capture="environment">
+    </div>
+    <div class="doc-card">
+      <p class="doc-card-title">추가 서류 <span class="doc-badge opt">기관마다 다름</span></p>
+      <p class="doc-list">
+        • 최근 3개월 매출내역 (카드단말기 or 홈택스)<br>
+        • 임대차계약서 (임차 사업장인 경우)<br>
+        • 건강보험료 납부확인서
+      </p>
+    </div>
+    <button class="btn-primary" onclick="showResult()">맞춤 지원자금 확인하기</button>
+    <button class="btn-secondary" onclick="goBack(3)">이전</button>
+  </div>
+
+  <!-- 4: 결과 -->
+  <div class="section" id="sec4">
+    <p class="section-title">신청 가능한<br>지원자금이에요</p>
+    <p class="result-tag" id="result-tag"></p>
+    <div class="fund-card">
+      <p class="fund-name">소상공인시장진흥공단<br>일반경영안정자금 <small>(소진공)</small></p>
+      <div class="fund-rows">
+        <div class="fund-item"><p class="fund-item-label">한도</p><p class="fund-item-value green">7,000만원</p></div>
+        <div class="fund-item"><p class="fund-item-label">금리</p><p class="fund-item-value green">연 2.5%</p></div>
+        <div class="fund-item"><p class="fund-item-label">신청처</p><p class="fund-item-value">소상공인24</p></div>
+        <div class="fund-item"><p class="fund-item-label">전화</p><p class="fund-item-value">☎ 1357</p></div>
+      </div>
+      <button class="fund-apply" onclick="location.href='https://www.sbiz.or.kr'">소상공인24 바로가기 →</button>
+    </div>
+    <div class="fund-card">
+      <p class="fund-name" id="shinbo-name">지역신용보증재단<br>보증부대출</p>
+      <div class="fund-rows">
+        <div class="fund-item"><p class="fund-item-label">한도</p><p class="fund-item-value green">1억원</p></div>
+        <div class="fund-item"><p class="fund-item-label">금리</p><p class="fund-item-value green">연 3~4%</p></div>
+        <div class="fund-item"><p class="fund-item-label">신청처</p><p class="fund-item-value" id="shinbo-site">지역신보</p></div>
+        <div class="fund-item"><p class="fund-item-label">전화</p><p class="fund-item-value" id="shinbo-tel">-</p></div>
+      </div>
+      <button class="fund-apply" id="shinbo-btn">신보 바로가기 →</button>
+    </div>
+    <div class="fund-card">
+      <p class="fund-name">소상공인시장진흥공단<br>성장촉진자금 <small>(소진공)</small></p>
+      <div class="fund-rows">
+        <div class="fund-item"><p class="fund-item-label">한도</p><p class="fund-item-value green">1억원</p></div>
+        <div class="fund-item"><p class="fund-item-label">금리</p><p class="fund-item-value green">연 3.0%</p></div>
+        <div class="fund-item"><p class="fund-item-label">신청처</p><p class="fund-item-value">소상공인24</p></div>
+        <div class="fund-item"><p class="fund-item-label">전화</p><p class="fund-item-value">☎ 1357</p></div>
+      </div>
+      <button class="fund-apply" onclick="location.href='https://www.sbiz.or.kr'">소상공인24 바로가기 →</button>
+    </div>
+    <div class="warn-box">⚠️ 소진공 자금은 연초 예산 소진이 빠름 — 1~2월 신청 권장</div>
+    <hr class="divider">
+    <div class="agent-box">
+      <p class="agent-title">그래도 막막하세요?</p>
+      <p class="agent-desc">저희도 마냥 무료봉사는 못해요 😅<br>진짜 모르겠을 때만 부르세요.<br>성공 시 수수료 <strong style="color:#0ea06b">3%</strong>만 받아요.<br><span style="font-size:12px">(기존 업체 8% 대비 절반 이하)</span></p>
+      <button class="btn-agent" onclick="goSection('sec-agent')">전문가에게 맡기기 →</button>
+    </div>
+    <button class="btn-secondary" style="margin-top:12px;" onclick="resetAll()">처음부터 다시</button>
+  </div>
+
+  <!-- 대행 선택 -->
+  <div class="section" id="sec-agent">
+    <p class="section-title">어떻게 연락드릴까요?</p>
+    <p class="section-sub">편하신 방법으로 선택해주세요.</p>
+    <div class="choice-card" onclick="goSection('sec-phone')">
+      <div class="choice-icon">📝</div>
+      <p class="choice-title">연락처 남기기</p>
+      <p class="choice-desc">번호 남겨주시면 전문가가 직접 연락드려요.<br>부담 없이 상담부터 받아보세요.</p>
+    </div>
+    <div class="choice-card" onclick="location.href='tel:010-0000-0000'">
+      <div class="choice-icon">📞</div>
+      <p class="choice-title">지금 바로 전화하기</p>
+      <p class="choice-desc">빠르게 연결하고 싶다면 직접 전화주세요.</p>
+    </div>
+    <button class="btn-secondary" onclick="goSection('sec4')">돌아가기</button>
+  </div>
+
+  <!-- 전화번호 입력 -->
+  <div class="section" id="sec-phone">
+    <p class="section-title">연락처를 남겨주세요</p>
+    <p class="section-sub">전문가가 확인 후 연락드릴게요.<br>영업시간: 평일 오전 9시 ~ 오후 6시</p>
+    <div class="phone-display">
+      <span id="phone-display"><span class="phone-placeholder">010 - 0000 - 0000</span></span>
+    </div>
+    <div class="keypad">
+      <button class="key" onclick="keyPress('1')">1</button>
+      <button class="key" onclick="keyPress('2')">2</button>
+      <button class="key" onclick="keyPress('3')">3</button>
+      <button class="key" onclick="keyPress('4')">4</button>
+      <button class="key" onclick="keyPress('5')">5</button>
+      <button class="key" onclick="keyPress('6')">6</button>
+      <button class="key" onclick="keyPress('7')">7</button>
+      <button class="key" onclick="keyPress('8')">8</button>
+      <button class="key" onclick="keyPress('9')">9</button>
+      <button class="key empty"></button>
+      <button class="key" onclick="keyPress('0')">0</button>
+      <button class="key del" onclick="keyDel()">⌫</button>
+    </div>
+    <button class="btn-primary" id="btn-phone" disabled onclick="submitPhone()">연락처 남기기</button>
+    <button class="btn-secondary" onclick="goSection('sec-agent')">이전</button>
+  </div>
+
+  <!-- 접수 완료 -->
+  <div class="section" id="sec-done">
+    <div style="text-align:center;padding:2rem 0 1.5rem;">
+      <div style="width:60px;height:60px;border-radius:50%;background:#e6f7f1;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px;">✓</div>
+      <p class="section-title" style="text-align:center">접수 완료!</p>
+      <p class="section-sub" style="text-align:center">전문가가 곧 연락드릴게요.<br>평일 영업시간 내 순서대로 연락드려요.</p>
+    </div>
+    <div style="background:#f7f8fa;border-radius:14px;padding:1rem 1.25rem;margin-bottom:1rem;">
+      <p style="font-size:13px;color:#888;margin-bottom:4px;">남기신 연락처</p>
+      <p style="font-size:22px;font-weight:700;color:#1a1a1a;" id="done-phone"></p>
+    </div>
+    <button class="btn-secondary" onclick="resetAll()">처음으로 돌아가기</button>
+  </div>
+</div>
+
+<script>
+  const state = { bizType:'', bizAge:'', revenue:'', credit:'', region:'' };
+  let phoneNum = '';
+
+  const shinboData = {
+    '서울': { name:'서울신용보증재단', site:'서울신보', tel:'☎ 1577-6119', url:'https://www.seoulshinbo.co.kr' },
+    '경기/인천': { name:'경기신용보증재단', site:'경기신보', tel:'☎ 1577-5900', url:'https://www.gcgf.or.kr' },
+    '부산/울산/경남': { name:'부산신용보증재단', site:'부산신보', tel:'☎ 1577-7462', url:'https://www.busancredit.or.kr' },
+    '대구/경북': { name:'대구신용보증재단', site:'대구신보', tel:'☎ 053-430-0114', url:'https://www.daegucredit.or.kr' },
+    '광주/전남/전북': { name:'광주신용보증재단', site:'광주신보', tel:'☎ 062-600-0500', url:'https://www.gjcredit.or.kr' },
+    '대전/충청': { name:'대전신용보증재단', site:'대전신보', tel:'☎ 042-480-1400', url:'https://www.djcredit.or.kr' },
+    '강원': { name:'강원신용보증재단', site:'강원신보', tel:'☎ 033-260-1700', url:'https://www.gwcredit.or.kr' },
+    '제주': { name:'제주신용보증재단', site:'제주신보', tel:'☎ 064-710-2114', url:'https://www.jejucredit.or.kr' },
+  };
+
+  document.querySelectorAll('#chips-type .chip').forEach(c => {
+    c.onclick = () => {
+      document.querySelectorAll('#chips-type .chip').forEach(x => x.classList.remove('selected'));
+      c.classList.add('selected');
+      state.bizType = c.dataset.val;
+      document.getElementById('btn1').disabled = false;
+    };
+  });
+
+  ['bizAge','revenue','credit','region'].forEach(id => {
+    document.getElementById(id).onchange = function(){ state[id]=this.value; checkBtn2(); };
+  });
+
+  function checkBtn2(){
+    document.getElementById('btn2').disabled = !(state.bizAge && state.revenue && state.credit && state.region);
+  }
+
+  function updateDots(step){
+    for(let i=0;i<5;i++){
+      const d=document.getElementById('dot'+i);
+      d.className='step-dot'+(i<step?' done':i===step?' active':'');
+    }
+  }
+
+  function goNext(from){
+    document.getElementById('sec'+from).classList.remove('active');
+    document.getElementById('sec'+(from+1)).classList.add('active');
+    updateDots(from+1); window.scrollTo(0,0);
+  }
+  function goBack(from){
+    document.getElementById('sec'+from).classList.remove('active');
+    document.getElementById('sec'+(from-1)).classList.add('active');
+    updateDots(from-1); window.scrollTo(0,0);
+  }
+  function goSection(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  function triggerUpload(inputId, btnId, statusId){
+    const input=document.getElementById(inputId);
+    input.onchange=function(){
+      if(input.files&&input.files[0]){
+        document.getElementById(btnId).textContent='✓ 완료';
+        document.getElementById(btnId).classList.add('done');
+        document.getElementById(statusId).style.display='block';
+      }
+    };
+    input.click();
+  }
+
+  function showResult(){
+    const sb=shinboData[state.region];
+    if(sb){
+      document.getElementById('shinbo-name').innerHTML=sb.name+'<br>보증부대출';
+      document.getElementById('shinbo-site').textContent=sb.site;
+      document.getElementById('shinbo-tel').textContent=sb.tel;
+      document.getElementById('shinbo-btn').onclick=()=>{ location.href=sb.url; };
+      document.getElementById('shinbo-btn').textContent=sb.site+' 바로가기 →';
+    }
+    document.getElementById('result-tag').textContent=state.bizType+' · '+state.region+' · '+state.bizAge;
+    goNext(3);
+  }
+
+  function keyPress(n){
+    if(phoneNum.length>=11) return;
+    phoneNum+=n; updatePhoneDisplay();
+    document.getElementById('btn-phone').disabled=phoneNum.length<10;
+  }
+  function keyDel(){
+    phoneNum=phoneNum.slice(0,-1); updatePhoneDisplay();
+    document.getElementById('btn-phone').disabled=phoneNum.length<10;
+  }
+  function updatePhoneDisplay(){
+    const el=document.getElementById('phone-display');
+    if(!phoneNum){ el.innerHTML='<span class="phone-placeholder">010 - 0000 - 0000</span>'; return; }
+    let f=phoneNum;
+    if(phoneNum.length>7) f=phoneNum.slice(0,3)+' - '+phoneNum.slice(3,7)+' - '+phoneNum.slice(7);
+    else if(phoneNum.length>3) f=phoneNum.slice(0,3)+' - '+phoneNum.slice(3);
+    el.innerHTML='<span class="phone-number">'+f+'</span>';
+  }
+
+  function submitPhone(){
+    const f=phoneNum.slice(0,3)+'-'+phoneNum.slice(3,7)+'-'+phoneNum.slice(7);
+    document.getElementById('done-phone').textContent=f;
+    goSection('sec-done');
+  }
+
+  function resetAll(){
+    phoneNum=''; Object.keys(state).forEach(k=>state[k]='');
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+    ['bizAge','revenue','credit','region'].forEach(id=>document.getElementById(id).value='');
+    ['btn1','btn2'].forEach(id=>document.getElementById(id).disabled=true);
+    document.getElementById('btn-phone').disabled=true;
+    ['btn-id','btn-biz'].forEach(id=>{ document.getElementById(id).textContent='📷 찍기'; document.getElementById(id).classList.remove('done'); });
+    ['status-id','status-biz'].forEach(id=>document.getElementById(id).style.display='none');
+    updatePhoneDisplay();
+    goSection('sec0'); updateDots(0);
+  }
+</script>
+</body>
+</html>
